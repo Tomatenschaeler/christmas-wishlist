@@ -67,7 +67,6 @@ const translations = {
     }
 };
 
-// Deine Render-Backend URL
 const API_URL = 'https://christmas-wishlist-mujr.onrender.com';
 
 let currentLang = 'en';
@@ -77,7 +76,6 @@ function t(key) {
     return translations[currentLang][key] || key;
 }
 
-// Hilfsfunktion für Fetch mit automatischer Cookie/Session-Übertragung
 async function apiFetch(endpoint, options = {}) {
     options.credentials = 'include';
     const url = endpoint.startsWith('/api') ? `${API_URL}${endpoint}` : endpoint;
@@ -315,3 +313,43 @@ async function loadSharedWishlist(code) {
         document.getElementById('authContainer').classList.remove('active');
         document.getElementById('dashboardContainer').classList.remove('active');
         const sharedContainer = document.getElementById('sharedContainer');
+        sharedContainer.classList.add('active');
+
+        document.getElementById('sharedTitle').textContent = `🎁 ${data.wishlist.title}`;
+        document.getElementById('sharedSubtitle').textContent = `${currentLang === 'en' ? 'Wishlist created by' : 'Wunschzettel von'} ${data.wishlist.username}`;
+
+        const grid = document.getElementById('sharedItemsGrid');
+        grid.innerHTML = '';
+
+        if (data.items.length === 0) {
+            grid.innerHTML = `<p style="grid-column: 1/-1; color: #666; font-style: italic;">${currentLang === 'en' ? 'This wishlist is currently empty.' : 'Dieser Wunschzettel ist derzeit leer.'}</p>`;
+            return;
+        }
+
+        data.items.forEach(item => {
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card';
+            const imgSrc = item.image_url ? item.image_url : 'https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=400&q=80';
+
+            itemCard.innerHTML = `
+                <div>
+                    <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=400&q=80'">
+                    <h4>${item.name}</h4>
+                </div>
+                <div>
+                    ${item.link ? `<a href="${item.link}" target="_blank">${t('viewLink')} ↗</a>` : ''}
+                </div>
+            `;
+            grid.appendChild(itemCard);
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+document.getElementById('backToHomeBtn').addEventListener('click', () => {
+    window.location.href = '/';
+});
+
+checkSession();
