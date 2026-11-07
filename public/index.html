@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christmas Wishlist 🎄</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="app-title">🎄 Christmas Wishlist</h1>
+            <button class="lang-switch" id="langToggle">DE / EN</button>
+        </header>
+
+        <div id="authContainer" class="auth-box active">
+            <h2 id="authHeading">Login</h2>
+            <form id="authForm">
+                <div class="form-group">
+                    <label id="labelUsername" for="username">Username</label>
+                    <input type="text" id="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label id="labelPassword" for="password">Password</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <div id="authError" class="error-msg"></div>
+                <button type="submit" class="btn" id="authSubmitBtn">Login</button>
+            </form>
+            <div class="auth-toggle">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="#" id="authToggleLink">Sign up</a>
+            </div>
+        </div>
+
+        <div id="dashboardContainer" class="dashboard">
+            <div class="user-bar">
+                <span id="welcomeUser">Welcome, User</span>
+                <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <h3 id="createListHeading">Create New Wishlist</h3>
+                <form id="createListForm" style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <input type="text" id="listTitle" placeholder="Wishlist Title (e.g. Christmas 2026)" required style="flex: 1; min-width: 200px;">
+                    <button type="submit" class="btn" id="createListBtn">Create List</button>
+                </form>
+            </div>
+
+            <h3 id="myListsHeading">My Wishlists</h3>
+            <div id="wishlistsContainer"></div>
+        </div>
+
+        <div id="sharedContainer" class="shared-view">
+            <h2 id="sharedTitle">Shared Christmas Wishlist</h2>
+            <p id="sharedSubtitle" style="margin-bottom: 20px; font-style: italic; color: var(--forest-green);"></p>
+            <div id="sharedItemsGrid" class="items-grid"></div>
+            <button class="btn btn-secondary" id="backToHomeBtn" style="margin-top: 20px;">Go to My Wishlists</button>
+        </div>
+    </div>
+
+    <footer>
+        <p id="footerText">🎄 Merry Christmas & Happy Holidays! 🎁</p>
+    </footer>
+
+    <script src="/app.js"></script>
+</body>
+</html>
