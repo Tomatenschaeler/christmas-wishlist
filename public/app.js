@@ -67,11 +67,21 @@ const translations = {
     }
 };
 
+// Deine Render-Backend URL
+const API_URL = 'https://christmas-wishlist-mujr.onrender.com';
+
 let currentLang = 'en';
 let isSignupMode = false;
 
 function t(key) {
     return translations[currentLang][key] || key;
+}
+
+// Hilfsfunktion für Fetch mit automatischer Cookie/Session-Übertragung
+async function apiFetch(endpoint, options = {}) {
+    options.credentials = 'include';
+    const url = endpoint.startsWith('/api') ? `${API_URL}${endpoint}` : endpoint;
+    return fetch(url, options);
 }
 
 function updateLanguageUI() {
@@ -118,7 +128,7 @@ document.getElementById('authForm').addEventListener('submit', async (e) => {
     const endpoint = isSignupMode ? '/api/signup' : '/api/login';
 
     try {
-        const res = await fetch(endpoint, {
+        const res = await apiFetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -138,7 +148,7 @@ document.getElementById('authForm').addEventListener('submit', async (e) => {
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/logout', { method: 'POST' });
+    await apiFetch('/api/logout', { method: 'POST' });
     checkSession();
 });
 
@@ -150,7 +160,7 @@ async function checkSession() {
     }
 
     try {
-        const res = await fetch('/api/session');
+        const res = await apiFetch('/api/session');
         const data = await res.json();
         if (data.loggedIn) {
             document.getElementById('authContainer').classList.remove('active');
@@ -170,7 +180,7 @@ async function checkSession() {
 
 async function loadWishlists() {
     try {
-        const res = await fetch('/api/wishlists');
+        const res = await apiFetch('/api/wishlists');
         const lists = await res.json();
         const container = document.getElementById('wishlistsContainer');
         container.innerHTML = '';
@@ -214,7 +224,7 @@ async function loadWishlists() {
 
 async function loadItems(wishlistId) {
     try {
-        const res = await fetch(`/api/wishlists/${wishlistId}/items`);
+        const res = await apiFetch(`/api/wishlists/${wishlistId}/items`);
         const items = await res.json();
         const grid = document.getElementById(`items-grid-${wishlistId}`);
         if (!grid) return;
@@ -245,7 +255,7 @@ async function loadItems(wishlistId) {
 document.getElementById('createListForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('listTitle').value;
-    const res = await fetch('/api/wishlists', {
+    const res = await apiFetch('/api/wishlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title })
@@ -258,7 +268,7 @@ document.getElementById('createListForm').addEventListener('submit', async (e) =
 
 async function deleteWishlist(id) {
     if (!confirm(currentLang === 'en' ? 'Are you sure you want to delete this wishlist?' : 'Möchtest du diesen Wunschzettel wirklich löschen?')) return;
-    await fetch(`/api/wishlists/${id}`, { method: 'DELETE' });
+    await apiFetch(`/api/wishlists/${id}`, { method: 'DELETE' });
     loadWishlists();
 }
 
@@ -269,7 +279,7 @@ async function addItem(e, wishlistId) {
     const link = form.elements['link'].value;
     const image_url = form.elements['image_url'].value;
 
-    const res = await fetch(`/api/wishlists/${wishlistId}/items`, {
+    const res = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, link, image_url })
@@ -282,13 +292,13 @@ async function addItem(e, wishlistId) {
 }
 
 async function deleteItem(id) {
-    await fetch(`/api/items/${id}`, { method: 'DELETE' });
+    await apiFetch(`/api/items/${id}`, { method: 'DELETE' });
     loadWishlists();
 }
 
 async function loadSharedWishlist(code) {
     try {
-        const res = await fetch(`/api/shared/${code}`);
+        const res = await apiFetch(`/api/shared/${code}`);
         const data = await res.json();
         if (!res.ok) {
             document.getElementById('app-title').textContent = t('title');
@@ -305,43 +315,3 @@ async function loadSharedWishlist(code) {
         document.getElementById('authContainer').classList.remove('active');
         document.getElementById('dashboardContainer').classList.remove('active');
         const sharedContainer = document.getElementById('sharedContainer');
-        sharedContainer.classList.add('active');
-
-        document.getElementById('sharedTitle').textContent = `🎁 ${data.wishlist.title}`;
-        document.getElementById('sharedSubtitle').textContent = `${currentLang === 'en' ? 'Wishlist created by' : 'Wunschzettel von'} ${data.wishlist.username}`;
-
-        const grid = document.getElementById('sharedItemsGrid');
-        grid.innerHTML = '';
-
-        if (data.items.length === 0) {
-            grid.innerHTML = `<p style="grid-column: 1/-1; color: #666; font-style: italic;">${currentLang === 'en' ? 'This wishlist is currently empty.' : 'Dieser Wunschzettel ist derzeit leer.'}</p>`;
-            return;
-        }
-
-        data.items.forEach(item => {
-            const itemCard = document.createElement('div');
-            itemCard.className = 'item-card';
-            const imgSrc = item.image_url ? item.image_url : 'https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=400&q=80';
-
-            itemCard.innerHTML = `
-                <div>
-                    <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=400&q=80'">
-                    <h4>${item.name}</h4>
-                </div>
-                <div>
-                    ${item.link ? `<a href="${item.link}" target="_blank">${t('viewLink')} ↗</a>` : ''}
-                </div>
-            `;
-            grid.appendChild(itemCard);
-        });
-
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-document.getElementById('backToHomeBtn').addEventListener('click', () => {
-    window.location.href = '/';
-});
-
-checkSession();
