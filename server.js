@@ -3,20 +3,36 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const crypto = require('crypto');
+const cors = require('cors');
 const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Wichtig für Render (Load Balancer / Proxy)
+app.set('trust proxy', 1);
+
+// CORS-Konfiguration für Cloudflare (Frontend) <-> Render (Backend)
+app.use(cors({
+    origin: true, // Erlaubt Anfragen von deiner Cloudflare-Domain
+    credentials: true // Erlaubt das Senden von Cookies / Sessions
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Session-Konfiguration mit Cross-Site-Cookie-Einstellungen
 app.use(session({
-    secret: 'christmas-secret-key-2026',
+    secret: process.env.SESSION_SECRET || 'christmas-secret-key-2026',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+    proxy: true,
+    cookie: { 
+        maxAge: 24 * 60 * 60 * 1000,
+        secure: true,   // Erforderlich für HTTPS (Render)
+        sameSite: 'none' // Erforderlich für Domains die sich unterscheiden (Cloudflare vs. Render)
+    }
 }));
 
 const isAuthenticated = (req, res, next) => {
